@@ -1,0 +1,14 @@
+services:
+  vault:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite:////srv/data/vault.db
+    volumes:
+      - vault-data:/srv/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+
+volumes:
+  vault-data:
