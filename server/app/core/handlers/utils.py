@@ -4,12 +4,12 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy import update
 from sqlmodel import Session, select
 
-from . import security as sec
-from .config import DEFAULT_KDF, settings
-from .db import get_session
-from .deps import current_user
-from .models import RefreshToken, User, utcnow
-from .schemas import *
+from .. import security as sec
+from ..config import DEFAULT_KDF, settings
+from ..database.db import get_session
+from ...deps import current_user
+from ..models.models import RefreshToken, User, utcnow
+from ..models.schemas import *
 
 def norm_email(email: str) -> str:
     return email.strip().lower()

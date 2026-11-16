@@ -1,13 +1,17 @@
 
-from .main import app
-from .utils import *
+from ..core.handlers.utils import *
+from fastapi import APIRouter
 
-@app.get("/health")
+from ._common import *
+
+api = APIRouter(prefix="")
+
+@api.get("/health")
 def health():
     return {"status": "ok"}
 # #enddef health
 
-@app.post("/prelogin", response_model=PreloginOut)
+@api.post("/prelogin", response_model=PreloginOut)
 def prelogin(body: PreloginIn, session: Session = Depends(get_session)):
     email: str = norm_email(body.email)
     user : User | None = session.exec(select(User).where(User.email == email)).first()
@@ -19,7 +23,7 @@ def prelogin(body: PreloginIn, session: Session = Depends(get_session)):
     return PreloginOut(salt=user.salt, kdf_params=KdfParams.model_validate_json(user.kdf_params))
 # #enddef prelogin
 
-@app.post("/register", status_code=status.HTTP_201_CREATED)
+@api.post("/register", status_code=status.HTTP_201_CREATED)
 def register(body: RegisterIn, session: Session = Depends(get_session)):
 
     if (not settings.allow_registration):
@@ -47,7 +51,7 @@ def register(body: RegisterIn, session: Session = Depends(get_session)):
     return {"status": "created"}
 # #enddef register
 
-@app.post("/login", response_model=LoginOut)
+@api.post("/login", response_model=LoginOut)
 def login(body: LoginIn, session: Session = Depends(get_session)):
     user: User | None = session.exec(select(User).where(User.email == norm_email(body.email))).first()
 
@@ -67,7 +71,7 @@ def login(body: LoginIn, session: Session = Depends(get_session)):
     )
 # #enddef login
 
-@app.post("/refresh", response_model=TokenOut)
+@api.post("/refresh", response_model=TokenOut)
 def refresh(body: RefreshIn, session: Session = Depends(get_session)):
     rt: RefreshToken | None = session.exec(
         select(
@@ -100,12 +104,12 @@ def refresh(body: RefreshIn, session: Session = Depends(get_session)):
     return issue_tokens(session, rt.user_id)
 # #enddef refresh
 
-@app.get("/vault", response_model=VaultOut)
+@api.get("/vault", response_model=VaultOut)
 def get_vault(user: User = Depends(current_user)):
     return VaultOut(vault_blob=user.vault_blob, version=user.version)
 # #enddef get_vault
 
-@app.put("/vault", response_model=VersionOut)
+@api.put("/vault", response_model=VersionOut)
 def put_vault(body: VaultPutIn, user: User = Depends(current_user), session: Session = Depends(get_session)):
     result = session.execute(
         update(User)
@@ -123,7 +127,7 @@ def put_vault(body: VaultPutIn, user: User = Depends(current_user), session: Ses
     return VersionOut(version=user.version)
 # #enddef put_vault
 
-@app.post("/change-password", response_model=TokenOut)
+@api.post("/change-password", response_model=TokenOut)
 def change_password(body: ChangePasswordIn, user: User = Depends(current_user), session: Session = Depends(get_session)):
     check_credentials(session, user, body.old_auth_key)
 

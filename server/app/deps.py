@@ -3,9 +3,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel import Session
 
-from . import security as sec
-from .db import get_session
-from .models import User
+from .core import security as sec
+from .core.database.db import get_session
+from .core.models.models import User
 
 _bearer = HTTPBearer(auto_error=False)
 

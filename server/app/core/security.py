@@ -9,7 +9,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
 
 from .config import settings
-from .models import utcnow
+from .models.models import utcnow
 
 _ph = PasswordHasher()
 _DUMMY_HASH = _ph.hash("dummy-auth-key")

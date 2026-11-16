@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import SQLModel
 
-from app.db import engine
+from server.app.core.database.db import engine
 from app.main import app
 
 

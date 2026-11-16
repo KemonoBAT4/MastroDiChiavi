@@ -3,8 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import settings
-from .db import init_db
+from .core.config import settings
+from .core.database.db import init_db
+from .routes.routes import api
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -13,6 +14,8 @@ async def lifespan(_: FastAPI):
 # #enddef lifespan
 
 app = FastAPI(title="Vault server (zero-knowledge)", lifespan=lifespan)
+
+app.include_router(api)
 
 ORIGINS: list[str] = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
 
