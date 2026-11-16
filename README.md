@@ -2,6 +2,7 @@
 Un Password Manager utilizzato localmente per gestire password
 
 <!-- TODO: add here an image representing both the desktop and the mobile app in the same image -->
+<!-- started a server refactor, keeping this as divider -->
 
 ## Getting Started:
 Per scaricare l'applicazione vai in [Releases](https://github.com/KemonoBAT4/MastroDiChiavi/releases) e scarica i file necessari.
