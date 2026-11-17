@@ -14,7 +14,8 @@ Il backend renderà disponibile di default la versione web dell'applicazione, in
 
 ### Descrizione file `(Releases)`:
 Insieme alla lista dei file che sono possibili da scaricare, verrà inserita una descrizione della versione, con un `Changelog` di tutti gli updates fatti per la versione
-- `server.zip` - Server dockerizzato + Applicazione Web integrata per la configurazione
+- `server.zip` - Server dockerizzato
+<!-- + Applicazione Web integrata per la configurazione -->
 - `android-mobile.zip` - Applicazione Mobile per Android
 - `windows-desktop.zip` - Applicazione Desktop per Windows
 <!-- - `linux-desktop.zip` - Applicazione Desktop per Linux
