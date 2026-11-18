@@ -30,6 +30,7 @@
     "@angular/router": "^20.3.0",
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
     "@aparajita/capacitor-secure-storage": "^8.0.1",
+    "@capacitor/android": "^8.6.2",
     "@capacitor/app": "^8.1.2",
     "@capacitor/clipboard": "^8.0.1",
     "@capacitor/core": "^8.6.0",
