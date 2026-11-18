@@ -7,3 +7,6 @@
 **/.angular/**
 **/dist/**
 **/android/**
+
+# --- other --- #
+**.zip
