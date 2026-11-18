@@ -1,5 +1,4 @@
 
-from ..core.handlers.utils import *
 from fastapi import APIRouter
 
 from ._common import *
@@ -12,28 +11,28 @@ def health():
 # #enddef health
 
 @api.post("/prelogin", response_model=PreloginOut)
-def prelogin(body: PreloginIn, session: Session = Depends(get_session)):
+def prelogin(body: PreloginIn, session: sm.Session = fa.Depends(get_session)):
     email: str = norm_email(body.email)
-    user : User | None = session.exec(select(User).where(User.email == email)).first()
+    user : User | None = session.exec(sm.select(User).where(User.email == email)).first()
 
     if (user is None):
-        return PreloginOut(salt=sec.fake_salt(email), kdf_params=KdfParams(**DEFAULT_KDF))
+        return PreloginOut(salt=fake_salt(email), kdf_params=KdfParams(**DEFAULT_KDF))
     # #endif
 
     return PreloginOut(salt=user.salt, kdf_params=KdfParams.model_validate_json(user.kdf_params))
 # #enddef prelogin
 
-@api.post("/register", status_code=status.HTTP_201_CREATED)
-def register(body: RegisterIn, session: Session = Depends(get_session)):
+@api.post("/register", status_code=fa.status.HTTP_201_CREATED)
+def register(body: RegisterIn, session: sm.Session = fa.Depends(get_session)):
 
     if (not settings.allow_registration):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Registration is closed")
+        raise fa.HTTPException(fa.status.HTTP_403_FORBIDDEN, "Registration is closed")
     # #endif
 
     email = norm_email(body.email)
 
-    if (session.exec(select(User).where(User.email == email)).first() is not None):
-        raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered")
+    if (session.exec(sm.select(User).where(User.email == email)).first() is not None):
+        raise fa.HTTPException(fa.status.HTTP_409_CONFLICT, "Email already registered")
     # #endif
 
     session.add(
@@ -41,7 +40,7 @@ def register(body: RegisterIn, session: Session = Depends(get_session)):
             email               = email,
             salt                = body.salt,
             kdf_params          = body.kdf_params.model_dump_json(),
-            auth_hash           = sec.hash_auth_key(body.auth_key),
+            auth_hash           = hash_auth_key(body.auth_key),
             protected_vault_key = body.protected_vault_key,
             vault_blob          = body.vault_blob,
         )
@@ -52,12 +51,12 @@ def register(body: RegisterIn, session: Session = Depends(get_session)):
 # #enddef register
 
 @api.post("/login", response_model=LoginOut)
-def login(body: LoginIn, session: Session = Depends(get_session)):
-    user: User | None = session.exec(select(User).where(User.email == norm_email(body.email))).first()
+def login(body: LoginIn, session: sm.Session = fa.Depends(get_session)):
+    user: User | None = session.exec(sm.select(User).where(User.email == norm_email(body.email))).first()
 
     if (user is None):
-        sec.burn_time()
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
+        burn_time()
+        raise fa.HTTPException(fa.status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
     # #endif
 
     check_credentials(session, user, body.auth_key)
@@ -72,16 +71,16 @@ def login(body: LoginIn, session: Session = Depends(get_session)):
 # #enddef login
 
 @api.post("/refresh", response_model=TokenOut)
-def refresh(body: RefreshIn, session: Session = Depends(get_session)):
+def refresh(body: RefreshIn, session: sm.Session = fa.Depends(get_session)):
     rt: RefreshToken | None = session.exec(
-        select(
+        sm.select(
             RefreshToken
         ).where(
-            RefreshToken.token_hash == sec.hash_refresh(body.refresh_token)
+            RefreshToken.token_hash == hash_refresh(body.refresh_token)
         )
     ).first()
 
-    invalid = HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid refresh token")
+    invalid = fa.HTTPException(fa.status.HTTP_401_UNAUTHORIZED, "Invalid refresh token")
 
     if (rt is None):
         raise invalid
@@ -105,33 +104,40 @@ def refresh(body: RefreshIn, session: Session = Depends(get_session)):
 # #enddef refresh
 
 @api.get("/vault", response_model=VaultOut)
-def get_vault(user: User = Depends(current_user)):
+def get_vault(user: User = fa.Depends(current_user)):
     return VaultOut(vault_blob=user.vault_blob, version=user.version)
 # #enddef get_vault
 
 @api.put("/vault", response_model=VersionOut)
-def put_vault(body: VaultPutIn, user: User = Depends(current_user), session: Session = Depends(get_session)):
+def put_vault(body: VaultPutIn, user: User = fa.Depends(current_user), session: sm.Session = fa.Depends(get_session)):
     result = session.execute(
-        update(User)
-        .where(User.id == user.id, User.version == body.base_version)
-        .values(vault_blob=body.vault_blob, version=User.version + 1, updated_at=utcnow())
+        sm.update(
+            User
+        ).where(
+            User.id == user.id,
+            User.version == body.base_version
+        ).values(
+            vault_blob=body.vault_blob,
+            version=User.version + 1,
+            updated_at=utcnow()
+        )
     )
 
     session.commit()
     session.refresh(user)
 
     if result.rowcount == 0:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail={"error": "version_conflict", "current_version": user.version})
+        raise fa.HTTPException(fa.status.HTTP_409_CONFLICT, detail={"error": "version_conflict", "current_version": user.version})
     # #endif
 
     return VersionOut(version=user.version)
 # #enddef put_vault
 
 @api.post("/change-password", response_model=TokenOut)
-def change_password(body: ChangePasswordIn, user: User = Depends(current_user), session: Session = Depends(get_session)):
+def change_password(body: ChangePasswordIn, user: User = fa.Depends(current_user), session: sm.Session = fa.Depends(get_session)):
     check_credentials(session, user, body.old_auth_key)
 
-    user.auth_hash           = sec.hash_auth_key(body.new_auth_key)
+    user.auth_hash           = hash_auth_key(body.new_auth_key)
     user.protected_vault_key = body.new_protected_vault_key
 
     if body.new_salt:

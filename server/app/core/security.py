@@ -1,17 +1,7 @@
-import base64
-import hashlib
-import hmac
-import secrets
-from datetime import timedelta
 
-import jwt
-from argon2 import PasswordHasher
-from argon2.exceptions import InvalidHashError, VerificationError
+from ._common import *
 
-from .config import settings
-from .models.models import utcnow
-
-_ph = PasswordHasher()
+_ph = argon2.PasswordHasher()
 _DUMMY_HASH = _ph.hash("dummy-auth-key")
 
 
@@ -22,7 +12,7 @@ def hash_auth_key(auth_key: str) -> str:
 def verify_auth_key(auth_hash: str, auth_key: str) -> bool:
     try:
         return _ph.verify(auth_hash, auth_key)
-    except (VerificationError, InvalidHashError):
+    except (argon2.exceptions.VerificationError, argon2.exceptions.InvalidHashError):
         return False
     # #endtry
 # #enddef verify_auth_key
@@ -41,7 +31,7 @@ def fake_salt(email: str) -> str:
 
 def create_access_token(user_id: str) -> str:
     now = utcnow()
-    payload = {"sub": user_id, "typ": "access", "iat": now, "exp": now + timedelta(minutes=settings.access_token_minutes)}
+    payload = {"sub": user_id, "typ": "access", "iat": now, "exp": now + datetime.timedelta(minutes=settings.access_token_minutes)}
 
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 # #enddef create_access_token

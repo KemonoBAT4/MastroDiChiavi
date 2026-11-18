@@ -1,19 +1,15 @@
-from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.core import *
+from app.routes import api
 
-from .core.config import settings
-from .core.database.db import init_db
-from .routes.routes import api
-
-@asynccontextmanager
-async def lifespan(_: FastAPI):
+@contextlib.asynccontextmanager
+async def lifespan(_: fa.FastAPI):
     init_db()
     yield
 # #enddef lifespan
 
-app = FastAPI(title="Vault server (zero-knowledge)", lifespan=lifespan)
+app = fa.FastAPI(title="Vault server (zero-knowledge)", lifespan=lifespan)
 
 app.include_router(api)
 
